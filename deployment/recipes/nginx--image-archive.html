@@ -916,7 +916,10 @@ doubt, enlist the help of an expert and conduct proper audits.</p>
 OHIF Viewer and its medical imaging data. This post covers one of many potential
 setups that accomplish that. Please note, noticably absent is user account
 control.</p>
-<p>Do not use this recipe to host sensitive medical data on the open web. Depending
+<blockquote>
+<p><strong>Do not use this recipe to host sensitive medical data on the open web!</strong> </p>
+</blockquote>
+<p>Depending
 on your company&apos;s policies, this may be an appropriate setup on an internal
 network when protected with a server&apos;s basic authentication. For a more robust
 setup, check out our <a href="user-account-control.html">user account control recipe</a>
@@ -928,12 +931,12 @@ that builds on the lessons learned here.</p>
 <li>Cross-Origin Resource Sharing (CORS) requests</li>
 </ul>
 <h3 id="handling-web-requests"><a name="handling-web-requests" class="plugin-anchor" href="#handling-web-requests"><i class="fa fa-link" aria-hidden="true"></i></a>Handling Web Requests</h3>
-<p>We mittigate our first issue by allowing <a href="https://www.nginx.com/resources/glossary/nginx/" target="_blank">Nginx</a> to handle incoming web
+<p>We mitigate our first issue by allowing <a href="https://www.nginx.com/resources/glossary/nginx/" target="_blank">Nginx</a> to handle incoming web
 requests. Nginx is open source software for web serving, reverse proxying,
 caching, and more. It&apos;s designed for maximum performance and stability --
 allowing us to more reliably serve content than Orthanc&apos;s built-in server can.</p>
 <p>More specifically, we accomplish this by using a
-<a href="https://en.wikipedia.org/wiki/Reverse_proxy" target="_blank"><code>reverse proxy</code></a> to retrieve
+<a href="https://en.wikipedia.org/wiki/Reverse_proxy" target="_blank"><code>reverse proxy</code></a> to retrieve 
 resources from our image archive (Orthanc), and when accessing its web admin.</p>
 <blockquote>
 <p>A reverse proxy is a type of proxy server that retrieves resources on behalf
@@ -941,7 +944,7 @@ of a client from one or more servers. These resources are then returned to the
 client, appearing as if they originated from the proxy server itself.</p>
 </blockquote>
 <h3 id="cors-issues"><a name="cors-issues" class="plugin-anchor" href="#cors-issues"><i class="fa fa-link" aria-hidden="true"></i></a>CORS Issues</h3>
-<p>Cross-Origin Resource Sharing (CORS) is a mechanism that uses HTTP headers to
+<p><a href="https://medium.com/@baphemot/understanding-cors-18ad6b478e2b" target="_blank">Cross-Origin Resource Sharing</a> (CORS) is a mechanism that uses HTTP headers to
 tell a browser which web applications have permission to access selected
 resources from a server at a different origin (domain, protocol, port). IE. By
 default, a Web App located at <code>http://my-website.com</code> can&apos;t access resources
@@ -952,8 +955,6 @@ hosted at <code>http://not-my-website.com</code></p>
 <li>Add appropriate <code>Access-Control-Allow-*</code> HTTP headers</li>
 </ol>
 <p><strong>This solution uses the first approach.</strong></p>
-<p>You can read more about CORS in this Medium article: <a href="https://medium.com/@baphemot/understanding-cors-18ad6b478e2b" target="_blank">Understanding
-CORS</a></p>
 <h3 id="diagram"><a name="diagram" class="plugin-anchor" href="#diagram"><i class="fa fa-link" aria-hidden="true"></i></a>Diagram</h3>
 <p>This setup allows us to create a setup similar to the one pictured below:</p>
 <div style="text-align: center;">
@@ -977,13 +978,17 @@ route for that resource is requested</li>
 <li><a href="https://docs.docker.com/docker-for-windows/" target="_blank">Docker for Windows</a></li>
 </ul>
 </li>
+<li>Node 16.x with optional Python and Visual Studio Build Tools (<a href="https://github.com/webpack/webpack/issues/14532" target="_blank">webpack 4 has an issue</a> with Node 17.x)<ul>
+<li><a href="https://nodejs.org/en/download/" target="_blank">Node.js</a></li>
+</ul>
+</li>
 </ul>
 <p><em>Not sure if you have <code>docker</code> installed already? Try running <code>docker --version</code>
 in command prompt or terminal</em></p>
 <h3 id="setup"><a name="setup" class="plugin-anchor" href="#setup"><i class="fa fa-link" aria-hidden="true"></i></a>Setup</h3>
 <p><em>Spin Things Up</em></p>
 <ul>
-<li>Navigate to <code>&lt;project-root&gt;/docker/OpenResty-Orthanc</code> in your shell</li>
+<li>Navigate to <code>./platform/viewer/.recipes/OpenResty-Orthanc</code> in your shell</li>
 <li>Run <code>docker-compose up</code></li>
 </ul>
 <p><em>Upload Your First Study</em></p>
@@ -995,12 +1000,12 @@ in command prompt or terminal</em></p>
 <li>Navigate back to <code>http://127.0.0.1/</code> to view your studies in the Study List</li>
 </ul>
 <h3 id="troubleshooting"><a name="troubleshooting" class="plugin-anchor" href="#troubleshooting"><i class="fa fa-link" aria-hidden="true"></i></a>Troubleshooting</h3>
-<p><em>Exit code 137</em></p>
+<h4 id="exit-code-137"><a name="exit-code-137" class="plugin-anchor" href="#exit-code-137"><i class="fa fa-link" aria-hidden="true"></i></a>Exit code 137</h4>
 <p>This means Docker ran out of memory. Open Docker Desktop, go to the <code>advanced</code>
 tab, and increase the amount of Memory available.</p>
-<p><em>Cannot create container for service X</em></p>
+<h4 id="cannot-create-container-for-service-x"><a name="cannot-create-container-for-service-x" class="plugin-anchor" href="#cannot-create-container-for-service-x"><i class="fa fa-link" aria-hidden="true"></i></a>Cannot create container for service X</h4>
 <p>Use this one with caution: <code>docker system prune</code></p>
-<p><em>X is already running</em></p>
+<h4 id="x-is-already-running"><a name="x-is-already-running" class="plugin-anchor" href="#x-is-already-running"><i class="fa fa-link" aria-hidden="true"></i></a>X is already running</h4>
 <p>Stop running all containers:</p>
 <ul>
 <li>Win: <code>docker ps -a -q | ForEach { docker stop $_ }</code></li>
@@ -1014,12 +1019,10 @@ likely want to update:</p>
 </ul>
 <h4 id="ohif-viewer"><a name="ohif-viewer" class="plugin-anchor" href="#ohif-viewer"><i class="fa fa-link" aria-hidden="true"></i></a>OHIF Viewer</h4>
 <p>The OHIF Viewer&apos;s configuration is imported from a static <code>.js</code> file. The
-configuration we use is set to a specific file when we build the viewer, and
+configuration we use is set to <a href="https://github.com/OHIF/Viewers/blob/master/platform/viewer/public/config/docker_openresty-orthanc.js" target="_blank">a specific file</a> when we build the viewer, and
 determined by the env variable: <code>APP_CONFIG</code>. You can see where we set its value
 in the <code>dockerfile</code> for this solution:</p>
 <p><code>ENV APP_CONFIG=config/docker_openresty-orthanc.js</code></p>
-<p>You can find the configuration we&apos;re using here:
-<code>/public/config/docker_openresty-orthanc.js</code></p>
 <p>To rebuild the <code>webapp</code> image created by our <code>dockerfile</code> after updating the
 Viewer&apos;s configuration, you can run:</p>
 <ul>
@@ -1027,7 +1030,7 @@ Viewer&apos;s configuration, you can run:</p>
 <li><code>docker-compose up --build</code></li>
 </ul>
 <h4 id="other"><a name="other" class="plugin-anchor" href="#other"><i class="fa fa-link" aria-hidden="true"></i></a>Other</h4>
-<p>All other files are found in: <code>/docker/OpenResty-Orthanc/</code></p>
+<p>All other files in this directory include</p>
 <table>
 <thead>
 <tr>
@@ -1171,7 +1174,7 @@ members put together:</p>
     <script>
         var gitbook = gitbook || [];
         gitbook.push(function() {
-            gitbook.page.hasChanged({"page":{"title":"Nginx + Image Archive","level":"3.2.2.3","depth":3,"next":{"title":"User Account Control","level":"3.2.2.4","depth":3,"path":"deployment/recipes/user-account-control.md","ref":"deployment/recipes/user-account-control.md","articles":[]},"previous":{"title":"Static","level":"3.2.2.2","depth":3,"path":"deployment/recipes/static-assets.md","ref":"deployment/recipes/static-assets.md","articles":[]},"dir":"ltr"},"config":{"plugins":["edit-link","theme-cornerstone","-fontsettings","github","ga","anchors","versions"],"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"pluginsConfig":{"github":{"url":"https://github.com/OHIF/Viewers"},"search":{},"theme-cornerstone":{},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"highlight":{},"sitemap":{"hostname":"https://docs.ohif.org","todo":"sitemap plugin removed; causing build errors"},"ga":{"configuration":"auto","token":"UA-110573590-2"},"versions":{"type":"branches","gitbookConfigURL":"https://raw.githubusercontent.com/OHIF/Viewers/master/docs/book.json","options":[{"value":"https://docs.ohif.org/history/v1/","text":"Version 1.0.0 (Meteor)"},{"value":"https://docs.ohif.org/","text":"Version 2.0.0","selected":true}]},"sharing":{"facebook":false,"twitter":false,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"edit-link":{"label":"Edit This Page","base":"https://github.com/OHIF/Viewers/edit/master/docs"},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false},"anchors":{}},"theme":"default","pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"variables":{},"title":"OHIF","links":{"sharing":{"facebook":false,"twitter":false}},"gitbook":">3.0.0","description":"Documentation for the OHIF framework"},"file":{"path":"deployment/recipes/nginx--image-archive.md","mtime":"2022-01-29T01:02:54.357Z","type":"markdown"},"gitbook":{"version":"3.2.3","time":"2022-01-29T01:03:31.940Z"},"basePath":"../..","book":{"language":""}});
+            gitbook.page.hasChanged({"page":{"title":"Nginx + Image Archive","level":"3.2.2.3","depth":3,"next":{"title":"User Account Control","level":"3.2.2.4","depth":3,"path":"deployment/recipes/user-account-control.md","ref":"deployment/recipes/user-account-control.md","articles":[]},"previous":{"title":"Static","level":"3.2.2.2","depth":3,"path":"deployment/recipes/static-assets.md","ref":"deployment/recipes/static-assets.md","articles":[]},"dir":"ltr"},"config":{"plugins":["edit-link","theme-cornerstone","-fontsettings","github","ga","anchors","versions"],"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"pluginsConfig":{"github":{"url":"https://github.com/OHIF/Viewers"},"search":{},"theme-cornerstone":{},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"highlight":{},"sitemap":{"hostname":"https://docs.ohif.org","todo":"sitemap plugin removed; causing build errors"},"ga":{"configuration":"auto","token":"UA-110573590-2"},"versions":{"type":"branches","gitbookConfigURL":"https://raw.githubusercontent.com/OHIF/Viewers/master/docs/book.json","options":[{"value":"https://docs.ohif.org/history/v1/","text":"Version 1.0.0 (Meteor)"},{"value":"https://docs.ohif.org/","text":"Version 2.0.0","selected":true}]},"sharing":{"facebook":false,"twitter":false,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"edit-link":{"label":"Edit This Page","base":"https://github.com/OHIF/Viewers/edit/master/docs"},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false},"anchors":{}},"theme":"default","pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"variables":{},"title":"OHIF","links":{"sharing":{"facebook":false,"twitter":false}},"gitbook":">3.0.0","description":"Documentation for the OHIF framework"},"file":{"path":"deployment/recipes/nginx--image-archive.md","mtime":"2022-01-31T15:02:38.706Z","type":"markdown"},"gitbook":{"version":"3.2.3","time":"2022-01-31T15:03:15.967Z"},"basePath":"../..","book":{"language":""}});
         });
     </script>
 </div>
