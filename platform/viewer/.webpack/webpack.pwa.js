@@ -24,13 +24,13 @@ const ENTRY_TARGET = process.env.ENTRY_TARGET || `${SRC_DIR}/index.js`;
 const Dotenv = require('dotenv-webpack');
 
 const setHeaders = (res, path) => {
-  res.setHeader('Content-Type', 'text/plain')
+  res.setHeader('Content-Type', 'text/plain');
   if (path.indexOf('.gz') !== -1) {
-    res.setHeader('Content-Encoding', 'gzip')
+    res.setHeader('Content-Encoding', 'gzip');
   } else if (path.indexOf('.br') !== -1) {
-    res.setHeader('Content-Encoding', 'br')
+    res.setHeader('Content-Encoding', 'br');
   }
-}
+};
 
 module.exports = (env, argv) => {
   const baseConfig = webpackBase(env, argv, { SRC_DIR, DIST_DIR });
@@ -45,7 +45,7 @@ module.exports = (env, argv) => {
       path: DIST_DIR,
       filename: isProdBuild ? '[name].bundle.[chunkhash].js' : '[name].js',
       publicPath: PUBLIC_URL, // Used by HtmlWebPackPlugin for asset prefix
-      devtoolModuleFilenameTemplate: function (info) {
+      devtoolModuleFilenameTemplate: function(info) {
         if (isProdBuild) {
           return `webpack:///${info.resourcePath}`;
         } else {
@@ -122,12 +122,12 @@ module.exports = (env, argv) => {
       client: {
         overlay: { errors: true, warnings: false },
       },
-      'static': [
+      static: [
         {
           directory: path.join(require('os').homedir(), 'dicomweb'),
           staticOptions: {
             extensions: ['gz', 'br'],
-            index: "index.json.gz",
+            index: 'index.json.gz',
             redirect: true,
             setHeaders,
           },
@@ -137,7 +137,7 @@ module.exports = (env, argv) => {
           directory: '../../testdata',
           staticOptions: {
             extensions: ['gz', 'br'],
-            index: "index.json.gz",
+            index: 'index.json.gz',
             redirect: true,
             setHeaders,
           },

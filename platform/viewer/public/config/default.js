@@ -1,5 +1,5 @@
 window.config = {
-  routerBasename: '/',
+  routerBasename: '/mycustomohifbasename',
   // whiteLabelling: {},
   extensions: [],
   modes: [],

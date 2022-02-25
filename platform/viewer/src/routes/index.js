@@ -65,7 +65,7 @@ const createRoutes = ({
   const { UserAuthenticationService } = servicesManager.services;
 
   return (
-    <Routes basename={routerBasename}>
+    <Routes>
       {allRoutes.map((route, i) => {
         return route.private === true ? (
           <PrivateRoute

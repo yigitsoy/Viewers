@@ -14,7 +14,7 @@ import {
   HangingProtocolService,
   CineService,
   UserAuthenticationService,
-  errorHandler
+  errorHandler,
   // utils,
 } from '@ohif/core';
 import ConfigPoint from 'config-point';
@@ -51,8 +51,8 @@ function appInit(appConfigOrFunc, defaultExtensions) {
   });
 
   // Load the default theme settings
-  const defaultTheme = config && config.defaultTheme || 'theme';
-  ConfigPoint.load(defaultTheme, '/theme', 'theme');
+  const defaultTheme = (config && config.defaultTheme) || 'theme';
+  // ConfigPoint.load(defaultTheme, '/theme', 'theme');
 
   servicesManager.registerServices([
     UINotificationService,
