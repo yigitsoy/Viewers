@@ -84,6 +84,7 @@ const createRoutes = ({
           />
         );
       })}
+      <Route path="*" element={<NotFound />} />
     </Routes>
   );
 };
