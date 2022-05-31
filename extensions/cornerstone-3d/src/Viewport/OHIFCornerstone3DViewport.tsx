@@ -60,6 +60,7 @@ const OHIFCornerstoneViewport = React.memo(props => {
   } = props;
 
   const [scrollbarHeight, setScrollbarHeight] = useState('100px');
+  const [viewportData, setViewportData] = useState(null);
   const [_, viewportGridService] = useViewportGrid();
 
   const elementRef = useRef();
@@ -95,7 +96,7 @@ const OHIFCornerstoneViewport = React.memo(props => {
       }
 
       const { viewportId, element } = evt.detail;
-      const viewportInfo = Cornerstone3DViewportService.getViewportInfoById(
+      const viewportInfo = Cornerstone3DViewportService.getViewportInfo(
         viewportId
       );
       const viewportIndex = viewportInfo.getViewportIndex();
@@ -165,6 +166,44 @@ const OHIFCornerstoneViewport = React.memo(props => {
     };
   }, []);
 
+  // subscribe to displaySet metadata invalidation (updates)
+  // Currently, if the metadata changes we need to re-render the display set
+  // for it to take effect in the viewport. As we deal with scaling in the loading,
+  // we need to remove the old volume from the cache, and let the
+  // viewport to re-add it which will use the new metadata. Otherwise, the
+  // viewport will use the cached volume and the new metadata will not be used.
+  // Note: this approach does not actually end of sending network requests
+  // and it uses the network cache
+  useEffect(() => {
+    const { unsubscribe } = DisplaySetService.subscribe(
+      DisplaySetService.EVENTS.DISPLAY_SET_SERIES_METADATA_INVALIDATED,
+      async invalidatedDisplaySetInstanceUID => {
+        if (
+          viewportData.displaySetInstanceUIDs.includes(
+            invalidatedDisplaySetInstanceUID
+          )
+        ) {
+          const newViewportData = await Cornerstone3DCacheService.invalidateViewportData(
+            viewportData,
+            invalidatedDisplaySetInstanceUID,
+            dataSource,
+            DisplaySetService
+          );
+
+          Cornerstone3DViewportService.updateViewport(
+            viewportIndex,
+            newViewportData
+          );
+
+          setViewportData(newViewportData);
+        }
+      }
+    );
+    return () => {
+      unsubscribe();
+    };
+  }, [viewportData, viewportIndex]);
+
   useEffect(() => {
     // handle the default viewportType to be stack
     if (!viewportOptions.viewportType) {
@@ -186,6 +225,8 @@ const OHIFCornerstoneViewport = React.memo(props => {
         viewportOptions,
         displaySetOptions
       );
+
+      setViewportData(viewportData);
     };
 
     loadViewportData();
@@ -342,7 +383,7 @@ function _jumpToMeasurement(
     displaySetInstanceUID
   );
 
-  const imageIdIndex = referencedDisplaySet.images.findIndex(
+  const imageIndex = referencedDisplaySet.images.findIndex(
     i => i.SOPInstanceUID === SOPInstanceUID
   );
 
@@ -355,7 +396,7 @@ function _jumpToMeasurement(
   if (targetElement !== null) {
     const metadata = {
       ...measurement.metadata,
-      imageIdIndex,
+      imageIndex,
     };
     cs3DTools.utilities.jumpToSlice(targetElement, metadata);
 

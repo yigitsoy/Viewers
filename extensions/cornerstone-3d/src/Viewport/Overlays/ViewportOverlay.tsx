@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { vec2, vec3 } from 'gl-matrix';
+import { vec3 } from 'gl-matrix';
 import PropTypes from 'prop-types';
 import { metaData, Enums, utilities } from '@cornerstonejs/core';
 import { ViewportOverlay } from '@ohif/ui';
@@ -50,7 +50,7 @@ function CornerstoneViewportOverlay({
     return () => {
       element.removeEventListener(Enums.Events.VOI_MODIFIED, updateVOI);
     };
-  }, [viewportIndex, viewportData]);
+  }, [viewportIndex, viewportData, voi, element]);
 
   /**
    * Updating the scale when the viewport changes its zoom
@@ -145,10 +145,7 @@ function CornerstoneViewportOverlay({
     let instanceNumber;
 
     if (viewportData.viewportType === Enums.ViewportType.STACK) {
-      const instanceNumber = _getInstanceNumberFromStack(
-        viewportData,
-        imageIndex
-      );
+      instanceNumber = _getInstanceNumberFromStack(viewportData, imageIndex);
 
       if (!instanceNumber) {
         return null;

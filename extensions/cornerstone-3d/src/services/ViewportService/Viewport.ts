@@ -19,6 +19,7 @@ export type ViewportOptions = {
   initialView?: string;
   syncGroups?: SyncGroup[];
   initialImageOptions?: InitialImageOptions;
+  customViewportOptions?: Record<string, unknown>;
 };
 
 export type PublicViewportOptions = {
@@ -30,12 +31,14 @@ export type PublicViewportOptions = {
   initialView?: string;
   syncGroups?: SyncGroup[];
   initialImageOptions?: InitialImageOptions;
+  customViewportOptions?: Record<string, unknown>;
 };
 
 export type PublicDisplaySetOptions = {
   voi?: VOI;
   voiInverted?: boolean;
   blendMode?: string;
+  slabThickness?: number;
   colormap?: string;
 };
 
@@ -43,6 +46,7 @@ export type DisplaySetOptions = {
   voi?: VOI;
   voiInverted: boolean;
   blendMode?: Enums.BlendModes;
+  slabThickness?: number;
   colormap?: string;
 };
 
@@ -198,15 +202,14 @@ class ViewportInfo {
   ): Array<DisplaySetOptions> {
     const displaySetOptions: Array<DisplaySetOptions> = [];
 
-    publicDisplaySetOptions.forEach(publicDisplaySetOption => {
-      const blendMode = getCornerstoneBlendMode(
-        publicDisplaySetOption.blendMode
-      );
+    publicDisplaySetOptions.forEach(option => {
+      const blendMode = getCornerstoneBlendMode(option.blendMode);
 
       displaySetOptions.push({
-        voi: publicDisplaySetOption.voi || ({} as VOI),
-        voiInverted: publicDisplaySetOption.voiInverted || false,
-        colormap: publicDisplaySetOption.colormap || undefined,
+        voi: option.voi || ({} as VOI),
+        voiInverted: option.voiInverted || false,
+        colormap: option.colormap || undefined,
+        slabThickness: option.slabThickness,
         blendMode,
       });
     });

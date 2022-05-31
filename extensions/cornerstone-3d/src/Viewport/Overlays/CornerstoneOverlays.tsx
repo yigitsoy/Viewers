@@ -41,6 +41,16 @@ function CornerstoneOverlays(props) {
     return null;
   }
 
+  if (viewportData) {
+    const viewportInfo = Cornerstone3DViewportService.getViewportInfoByIndex(
+      viewportIndex
+    );
+
+    if (viewportInfo?.viewportOptions?.customViewportOptions?.hideOverlays) {
+      return null;
+    }
+  }
+
   return (
     <>
       <ViewportImageScrollbar

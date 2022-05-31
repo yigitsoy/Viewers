@@ -2,6 +2,7 @@ import OHIF from '@ohif/core';
 import { ContextMenuMeasurements } from '@ohif/ui';
 
 import * as cornerstone3D from '@cornerstonejs/core';
+import * as cornerstone3DTools from '@cornerstonejs/tools';
 import {
   init as cs3DInit,
   eventTarget,
@@ -20,10 +21,11 @@ import initWADOImageLoader from './initWADOImageLoader';
 import initCornerstoneTools from './initCornerstoneTools';
 
 import { connectToolsToMeasurementService } from './initMeasurementService';
-import callInputDialog from './callInputDialog';
+import callInputDialog from './utils/callInputDialog';
 import initCineService from './initCineService';
 import interleaveCenterLoader from './utils/interleaveCenterLoader';
 import interleaveTopToBottom from './utils/interleaveTopToBottom';
+import initSegmentationService from './initSegmentationService';
 
 const cs3DToolsEvents = Enums.Events;
 
@@ -31,6 +33,7 @@ let CONTEXT_MENU_OPEN = false;
 
 // TODO: Cypress tests are currently grabbing this from the window?
 window.cornerstone = cornerstone3D;
+window.cornerstoneTools = cornerstone3DTools;
 /**
  *
  */
@@ -52,6 +55,7 @@ export default async function init({
     CineService,
     Cornerstone3DViewportService,
     HangingProtocolService,
+    SegmentationService,
   } = servicesManager.services;
 
   const metadataProvider = OHIF.classes.MetadataProvider;
@@ -97,6 +101,8 @@ export default async function init({
     DisplaySetService,
     Cornerstone3DViewportService
   );
+
+  initSegmentationService(SegmentationService, Cornerstone3DViewportService);
 
   initCineService(CineService);
 
@@ -255,7 +261,7 @@ export default async function init({
   function elementDisabledHandler(evt) {
     const { viewportId, element } = evt.detail;
 
-    const viewportInfo = Cornerstone3DViewportService.getViewportInfoById(
+    const viewportInfo = Cornerstone3DViewportService.getViewportInfo(
       viewportId
     );
     ToolGroupService.disable(viewportInfo);

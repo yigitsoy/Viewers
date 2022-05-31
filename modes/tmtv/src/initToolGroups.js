@@ -6,13 +6,7 @@ export const toolGroupIds = {
   default: 'default',
 };
 
-function initToolGroups(extensionManager, ToolGroupService) {
-  const utilityModule = extensionManager.getModuleEntry(
-    '@ohif/extension-cornerstone-3d.utilityModule.tools'
-  );
-
-  const { toolNames, Enums } = utilityModule.exports;
-
+function initToolGroups(toolNames, Enums, ToolGroupService, commandsManager) {
   const tools = {
     active: [
       {
@@ -40,14 +34,63 @@ function initToolGroups(extensionManager, ToolGroupService) {
       { toolName: toolNames.Angle },
       { toolName: toolNames.Magnify },
     ],
-    // enabled
-    // disabled
+    enabled: [{ toolName: toolNames.SegmentationDisplay }],
+    disabled: [{ toolName: toolNames.Crosshairs }],
   };
 
-  ToolGroupService.createToolGroupAndAddTools(toolGroupIds.CT, tools);
-  ToolGroupService.createToolGroupAndAddTools(toolGroupIds.PT, tools);
-  ToolGroupService.createToolGroupAndAddTools(toolGroupIds.Fusion, tools);
-  ToolGroupService.createToolGroupAndAddTools(toolGroupIds.default, tools);
+  const toolsConfig = {
+    [toolNames.Crosshairs]: {
+      viewportIndicators: false,
+      autoPan: {
+        enabled: true,
+        panSize: 10,
+      },
+    },
+    [toolNames.ArrowAnnotate]: {
+      getTextCallback: (callback, eventDetails) => {
+        commandsManager.runCommand('arrowTextCallback', {
+          callback,
+          eventDetails,
+        });
+      },
+
+      changeTextCallback: (data, eventDetails, callback) =>
+        commandsManager.runCommand('arrowTextCallback', {
+          callback,
+          data,
+          eventDetails,
+        }),
+    },
+  };
+
+  ToolGroupService.createToolGroupAndAddTools(
+    toolGroupIds.CT,
+    tools,
+    toolsConfig
+  );
+  ToolGroupService.createToolGroupAndAddTools(
+    toolGroupIds.PT,
+    {
+      active: tools.active,
+      passive: [
+        ...tools.passive,
+        { toolName: 'RectangleROIStartEndThreshold' },
+      ],
+      enabled: tools.enabled,
+      disabled: tools.disabled,
+    },
+    toolsConfig
+  );
+  ToolGroupService.createToolGroupAndAddTools(
+    toolGroupIds.Fusion,
+    tools,
+    toolsConfig
+  );
+  ToolGroupService.createToolGroupAndAddTools(
+    toolGroupIds.default,
+    tools,
+    toolsConfig
+  );
 
   const mipTools = {
     active: [
@@ -59,9 +102,23 @@ function initToolGroups(extensionManager, ToolGroupService) {
         bindings: [{ mouseButton: Enums.MouseBindings.Primary }],
       },
     ],
+    enabled: [{ toolName: toolNames.SegmentationDisplay }],
   };
 
-  ToolGroupService.createToolGroupAndAddTools(toolGroupIds.MIP, mipTools);
+  const mipToolsConfig = {
+    [toolNames.VolumeRotateMouseWheel]: {
+      rotateIncrementDegrees: 0.1,
+    },
+    [toolNames.MipJumpToClick]: {
+      targetViewportIds: ['ptAXIAL', 'ptCORONAL', 'ptSAGITTAL'],
+    },
+  };
+
+  ToolGroupService.createToolGroupAndAddTools(
+    toolGroupIds.MIP,
+    mipTools,
+    mipToolsConfig
+  );
 }
 
 export default initToolGroups;

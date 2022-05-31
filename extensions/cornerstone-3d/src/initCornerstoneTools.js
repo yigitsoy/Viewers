@@ -17,6 +17,8 @@ const {
   AngleTool,
   MagnifyTool,
   CrosshairsTool,
+  RectangleROIStartEndThresholdTool,
+  SegmentationDisplayTool,
 } = cornerstone3DTools;
 
 export default function initCornerstone3DTools(configuration = {}) {
@@ -37,6 +39,7 @@ export default function initCornerstone3DTools(configuration = {}) {
   cornerstone3DTools.addTool(AngleTool);
   cornerstone3DTools.addTool(MagnifyTool);
   cornerstone3DTools.addTool(CrosshairsTool);
+  cornerstone3DTools.addTool(SegmentationDisplayTool);
 }
 
 const toolNames = {
@@ -56,6 +59,7 @@ const toolNames = {
   Angle: AngleTool.toolName,
   Magnify: MagnifyTool.toolName,
   Crosshairs: CrosshairsTool.toolName,
+  SegmentationDisplay: SegmentationDisplayTool.toolName,
 };
 
 export { toolNames };

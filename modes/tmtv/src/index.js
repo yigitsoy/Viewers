@@ -2,6 +2,8 @@ import { hotkeys } from '@ohif/core';
 import toolbarButtons from './toolbarButtons.js';
 import { id } from './id.js';
 import initToolGroups, { toolGroupIds } from './initToolGroups.js';
+import setCrosshairsConfiguration from './utils/setCrosshairsConfiguration.js';
+import setEllipticalROIConfiguration from './utils/setEllipticalROIConfiguration.js';
 
 const ohif = {
   layout: '@ohif/extension-default.layoutTemplateModule.viewerLayout',
@@ -17,6 +19,8 @@ const cs3d = {
 
 const tmtv = {
   hangingProtocols: '@ohif/extension-tmtv.hangingProtocolModule.ptCT',
+  petSUV: '@ohif/extension-tmtv.panelModule.petSUV',
+  ROIThresholdPanel: '@ohif/extension-tmtv.panelModule.ROIThresholdSeg',
 };
 
 const extensionDependencies = {
@@ -26,6 +30,7 @@ const extensionDependencies = {
   '@ohif/extension-tmtv': '^3.0.0',
 };
 
+let unsubscriptions = [];
 function modeFactory({ modeConfiguration }) {
   return {
     // TODO: We're using this as a route segment
@@ -36,15 +41,24 @@ function modeFactory({ modeConfiguration }) {
     /**
      * Lifecycle hooks
      */
-    onModeEnter: ({ servicesManager, extensionManager }) => {
-      const { ToolBarService, ToolGroupService } = servicesManager.services;
+    onModeEnter: ({ servicesManager, extensionManager, commandsManager }) => {
+      const {
+        ToolBarService,
+        ToolGroupService,
+        HangingProtocolService,
+        DisplaySetService,
+      } = servicesManager.services;
+
+      const utilityModule = extensionManager.getModuleEntry(
+        '@ohif/extension-cornerstone-3d.utilityModule.tools'
+      );
+
+      const { toolNames, Enums } = utilityModule.exports;
 
       // Init Default and SR ToolGroups
-      initToolGroups(extensionManager, ToolGroupService);
+      initToolGroups(toolNames, Enums, ToolGroupService, commandsManager);
 
-      let unsubscribe;
-
-      const activateTool = () => {
+      const activateWindowLevel = () => {
         ToolBarService.recordInteraction({
           groupId: 'WindowLevel',
           itemId: 'WindowLevel',
@@ -53,7 +67,7 @@ function modeFactory({ modeConfiguration }) {
             {
               commandName: 'setToolActive',
               commandOptions: {
-                toolName: 'WindowLevel',
+                toolName: toolNames.WindowLevel,
                 toolGroupId: toolGroupIds.CT,
               },
               context: 'CORNERSTONE3D',
@@ -61,7 +75,7 @@ function modeFactory({ modeConfiguration }) {
             {
               commandName: 'setToolActive',
               commandOptions: {
-                toolName: 'WindowLevel',
+                toolName: toolNames.WindowLevel,
                 toolGroupId: toolGroupIds.PT,
               },
               context: 'CORNERSTONE3D',
@@ -69,36 +83,53 @@ function modeFactory({ modeConfiguration }) {
             {
               commandName: 'setToolActive',
               commandOptions: {
-                toolName: 'WindowLevel',
+                toolName: toolNames.WindowLevel,
                 toolGroupId: toolGroupIds.Fusion,
               },
               context: 'CORNERSTONE3D',
             },
           ],
         });
-
-        // We don't need to reset the active tool whenever a viewport is getting
-        // added to the toolGroup.
-        unsubscribe();
       };
 
       // Since we only have one viewport for the basic cs3d mode and it has
       // only one hanging protocol, we can just use the first viewport
-      ({ unsubscribe } = ToolGroupService.subscribe(
+      const { unsubscribe } = ToolGroupService.subscribe(
         ToolGroupService.EVENTS.VIEWPORT_ADDED,
-        activateTool
-      ));
+        () => {
+          activateWindowLevel();
+          // For fusion toolGroup we need to add the volumeIds for the crosshairs
+          // since in the fusion viewport we don't want both PT and CT to render MIP
+          // when slabThickness is modified
+          const matches = HangingProtocolService.getDisplaySetsMatchDetails();
 
+          setCrosshairsConfiguration(
+            matches,
+            toolNames,
+            ToolGroupService,
+            DisplaySetService
+          );
+
+          setEllipticalROIConfiguration(
+            matches,
+            toolNames,
+            ToolGroupService,
+            DisplaySetService
+          );
+        }
+      );
+
+      unsubscriptions.push(unsubscribe);
       ToolBarService.init(extensionManager);
       ToolBarService.addButtons(toolbarButtons);
       ToolBarService.createButtonSection('primary', [
         'MeasurementTools',
         'Zoom',
         'WindowLevel',
+        'Crosshairs',
         'Pan',
-        'Capture',
-        'Layout',
-        'MoreTools',
+        'RectangleROIStartEndThreshold',
+        'fusionPTColormap',
       ]);
     },
     onModeExit: ({ servicesManager }) => {
@@ -109,6 +140,7 @@ function modeFactory({ modeConfiguration }) {
         ToolBarService,
       } = servicesManager.services;
 
+      unsubscriptions.forEach(unsubscribe => unsubscribe());
       ToolBarService.reset();
       MeasurementService.clearMeasurements();
       ToolGroupService.destroy();
@@ -139,8 +171,8 @@ function modeFactory({ modeConfiguration }) {
           return {
             id: ohif.layout,
             props: {
-              leftPanels: [ohif.thumbnailList],
-              rightPanels: [ohif.measurements],
+              leftPanels: [],
+              rightPanels: [tmtv.ROIThresholdPanel, tmtv.petSUV],
               viewports: [
                 {
                   namespace: cs3d.viewport,

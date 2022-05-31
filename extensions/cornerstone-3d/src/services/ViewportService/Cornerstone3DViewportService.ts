@@ -1,11 +1,13 @@
-import { pubSubServiceInterface, utils } from '@ohif/core';
+import { pubSubServiceInterface } from '@ohif/core';
 import {
   RenderingEngine,
   StackViewport,
+  Enums,
   Types,
   getRenderingEngine,
   utilities as csUtils,
   VolumeViewport,
+  cache,
 } from '@cornerstonejs/core';
 
 import { utilities as csToolsUtils } from '@cornerstonejs/tools';
@@ -18,7 +20,6 @@ import ViewportInfo, {
 } from './Viewport';
 import { StackData, VolumeData } from './Cornerstone3DCacheService';
 import {
-  setColorTransferFunctionFromVolumeMetadata,
   setColormap,
   setLowerUpperColorTransferFunction,
 } from '../../utils/colormap/transferFunctionHelpers';
@@ -124,6 +125,7 @@ class Cornerstone3DViewportService implements IViewportService {
     this.viewportGridResizeObserver = null;
     this.renderingEngine.destroy();
     this.renderingEngine = null;
+    cache.purgeCache();
   }
 
   /**
@@ -205,7 +207,7 @@ class Cornerstone3DViewportService implements IViewportService {
   public getCornerstone3DViewport(
     viewportId: string
   ): Types.IStackViewport | Types.IVolumeViewport | null {
-    const viewportInfo = this.getViewportInfoById(viewportId);
+    const viewportInfo = this.getViewportInfo(viewportId);
 
     if (
       !viewportInfo ||
@@ -249,7 +251,7 @@ class Cornerstone3DViewportService implements IViewportService {
     return this.viewportsInfo.get(viewportIndex);
   }
 
-  public getViewportInfoById(viewportId: string): ViewportInfo {
+  public getViewportInfo(viewportId: string): ViewportInfo {
     // @ts-ignore
     for (const [index, viewport] of this.viewportsInfo.entries()) {
       if (viewport.getViewportId() === viewportId) {
@@ -353,6 +355,7 @@ class Cornerstone3DViewportService implements IViewportService {
     // (This call may or may not create sub-requests for series metadata)
     const volumeInputArray = [];
     const displaySetOptionsArray = viewportInfo.getDisplaySetOptions();
+    const { HangingProtocolService } = this;
 
     for (let i = 0; i < viewportData.imageIds.length; i++) {
       const imageIds = viewportData.imageIds[i];
@@ -379,15 +382,16 @@ class Cornerstone3DViewportService implements IViewportService {
         volumeId,
         callback,
         blendMode: displaySetOptions.blendMode,
-        slabThickness: displaySetOptions.blendMode
-          ? displaySetOptions.slabThickness || 500
-          : undefined,
+        slabThickness: this._getSlabThickness(displaySetOptions, volumeId),
       });
     }
 
-    if (this.HangingProtocolService.hasCustomImageLoadStrategy()) {
+    if (
+      HangingProtocolService.hasCustomImageLoadStrategy() &&
+      !HangingProtocolService.customImageLoadPerformed
+    ) {
       // delegate the volume loading to the hanging protocol service if it has a custom image load strategy
-      return this.HangingProtocolService.runImageLoadStrategy({
+      return HangingProtocolService.runImageLoadStrategy({
         viewportId: viewport.id,
         volumeInputArray,
       });
@@ -402,7 +406,7 @@ class Cornerstone3DViewportService implements IViewportService {
 
   public setVolumesForViewport(viewport, volumeInputArray) {
     viewport.setVolumes(volumeInputArray).then(() => {
-      const viewportInfo = this.getViewportInfoById(viewport.id);
+      const viewportInfo = this.getViewportInfo(viewport.id);
       const initialImageOptions = viewportInfo.getInitialImageOptions();
 
       if (
@@ -429,6 +433,23 @@ class Cornerstone3DViewportService implements IViewportService {
 
       viewport.render();
     });
+  }
+
+  public updateViewport(viewportIndex, viewportData) {
+    const viewportInfo = this.getViewportInfoByIndex(viewportIndex);
+
+    const viewportId = viewportInfo.getViewportId();
+    const viewport = this.getCornerstone3DViewport(viewportId);
+
+    if (viewport instanceof VolumeViewport) {
+      this._setVolumeViewport(viewport, viewportData, viewportInfo);
+      return;
+    }
+
+    if (viewport instanceof StackViewport) {
+      this._setStackViewport(viewport, viewportData, viewportInfo);
+      return;
+    }
   }
 
   _getVOICallbacks(volumeId, displaySetOptions) {
@@ -486,6 +507,35 @@ class Cornerstone3DViewportService implements IViewportService {
   _removeResizeObserver() {
     if (this.viewportGridResizeObserver) {
       this.viewportGridResizeObserver.disconnect();
+    }
+  }
+
+  _getSlabThickness(displaySetOptions, volumeId) {
+    const { blendMode } = displaySetOptions;
+    if (
+      blendMode === undefined ||
+      displaySetOptions.slabThickness === undefined
+    ) {
+      return;
+    }
+
+    // if there is a slabThickness set as a number then use it
+    if (typeof displaySetOptions.slabThickness === 'number') {
+      return displaySetOptions.slabThickness;
+    }
+
+    if (displaySetOptions.slabThickness.toLowerCase() === 'fullvolume') {
+      // calculate the slab thickness based on the volume dimensions
+      const imageVolume = cache.getVolume(volumeId);
+
+      const { dimensions } = imageVolume;
+      const slabThickness = Math.sqrt(
+        dimensions[0] * dimensions[0] +
+          dimensions[1] * dimensions[1] +
+          dimensions[2] * dimensions[2]
+      );
+
+      return slabThickness;
     }
   }
 
