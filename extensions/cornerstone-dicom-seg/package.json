@@ -1,7 +1,20 @@
 {
-  "repository": "OHIF/Viewers",
-  "keywords": ["ohif-extension"],
+  "name": "@ohif/extension-cornerstone-dicom-seg",
+  "version": "3.0.0",
+  "description": "DICOM SEG read workflow",
+  "author": "OHIF",
+  "license": "MIT",
+  "main": "dist/umd/dicom-seg/index.umd.js",
   "module": "src/index.tsx",
+  "files": [
+    "dist/**",
+    "public/**",
+    "README.md"
+  ],
+  "repository": "OHIF/Viewers",
+  "keywords": [
+    "ohif-extension"
+  ],
   "engines": {
     "node": ">=14",
     "npm": ">=6",
