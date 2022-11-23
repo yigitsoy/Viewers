@@ -9,6 +9,7 @@ import Local from './Local';
 import NotFound from './NotFound';
 import buildModeRoutes from './buildModeRoutes';
 import PrivateRoute from './PrivateRoute';
+import DataSourceSelector from './DataSourceSelector';
 
 // TODO: Make these configurable
 // TODO: Include "routes" debug route if dev build
@@ -19,6 +20,11 @@ const bakedInRoutes = [
     children: DataSourceWrapper,
     private: true,
     props: { children: WorkList },
+  },
+  {
+    path: '/datasources',
+    children: DataSourceSelector,
+    private: true,
   },
   {
     path: '/local',
